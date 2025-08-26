@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <mutex>
 
 enum class LogLevel {
     INFO = 0,
@@ -34,7 +35,7 @@ LogLevel strToLogLevel(std::string str) {
 class Logger {
 public:
     Logger(std::string filename, LogLevel defaultLogLevel) {
-
+        this->filename = filename;
     }
 
     bool log(std::string message, LogLevel logLevel);
@@ -43,5 +44,6 @@ public:
 
 private:
     LogLevel defaultLogLevel;
-    
+    std::mutex mtx;
+    std::string filename;
 };
