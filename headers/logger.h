@@ -2,6 +2,8 @@
 
 #include <string>
 #include <mutex>
+#include <iostream>
+#include <fstream>
 
 enum class LogLevel {
     INFO = 0,
@@ -9,7 +11,7 @@ enum class LogLevel {
     ERROR = 2,
 };
 
-std::string logLevelToStr(LogLevel loglevel) {
+static std::string logLevelToStr(LogLevel loglevel) {
     switch(loglevel) {
         case LogLevel::INFO:
             return "INFO";
@@ -25,25 +27,33 @@ std::string logLevelToStr(LogLevel loglevel) {
     }
 }
 
-LogLevel strToLogLevel(std::string str) {
+static LogLevel strToLogLevel(std::string str) {
     if (str == "INFO") return LogLevel::INFO;
     if (str == "WARNING") return LogLevel::WARNING;
     if (str == "ERROR") return LogLevel::ERROR;
-    return LogLevel::INFO;
+    throw std::invalid_argument("Незивестный LogLevel");
 }
 
 class Logger {
 public:
-    Logger(std::string filename, LogLevel defaultLogLevel) {
-        this->filename = filename;
-    }
+
+    const char lineSeparator = '\n';
+    const char wordSeparator = '|';
+
+    Logger(std::string filename, LogLevel defaultLogLevel);
 
     bool log(std::string message, LogLevel logLevel);
 
     void setDefaultLogLevel(LogLevel loglevel);
+    
+    LogLevel getDefaultLogLevel();
 
+    ~Logger();
 private:
     LogLevel defaultLogLevel;
     std::mutex mtx;
     std::string filename;
+    std::ofstream file;
+
+    
 };
