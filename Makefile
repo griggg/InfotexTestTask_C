@@ -7,12 +7,14 @@ BUILD_DIR = build
 SRC_DIR = src
 TEST_DIR = tests
 
-all: client logger test_logger
+all: client test_logger
 
-logger: $(SRC_DIR)/logger.cpp
+$(BUILD_DIR)/liblogger.so : $(SRC_DIR)/logger.cpp
+	$(CC) -fPIC -shared $< -o $(BUILD_DIR)/liblogger.so 
+	
 
-client: $(SRC_DIR)/client.cpp $(SRC_DIR)/logger.cpp
-	$(CC) $^ -o $(BUILD_DIR)/$@
+client: $(SRC_DIR)/client.cpp $(BUILD_DIR)/liblogger.so
+	$(CC) $^ -Lbuild -llogger -Wl,-rpath=build -o $(BUILD_DIR)/$@
 
 test_logger: $(SRC_DIR)/logger.cpp $(TEST_DIR)/test_logger.cpp
 	$(CC) $^ -o $(BUILD_DIR)/$@
