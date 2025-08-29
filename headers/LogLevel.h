@@ -9,7 +9,7 @@ enum class LogLevel {
 	ERROR = 2,
 };
 
-static std::string logLevelToStr(LogLevel loglevel) {
+inline std::string logLevelToStr(LogLevel loglevel) {
 	switch (loglevel) {
 		case LogLevel::INFO:
 			return "INFO";
@@ -25,7 +25,7 @@ static std::string logLevelToStr(LogLevel loglevel) {
 	}
 }
 
-static LogLevel strToLogLevel(std::string str) {
+inline LogLevel strToLogLevel(std::string str) {
 	if (str == "INFO") return LogLevel::INFO;
 	if (str == "WARNING") return LogLevel::WARNING;
 	if (str == "ERROR") return LogLevel::ERROR;

@@ -118,7 +118,7 @@ void testEmptyCommand() {
     try {
         client.log({});
         assert(false);
-    } catch (std::invalid_argument) {
+    } catch (std::invalid_argument &e) {
         std::cout << "testEmptyCommand пройден\n";
     }
 }

@@ -23,6 +23,6 @@ inline std::string YELLOW(const std::string& text) {
     return "\033[33m" + text + "\033[0m";
 }
 
-static void print(std::string m) {
+inline void print(std::string m) {
     std::cout << m << std::endl;
 }

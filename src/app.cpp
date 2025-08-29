@@ -32,7 +32,7 @@ int main() {
             std::getline(std::cin, line);
             client.loggerInit(line);
             successInit = 1;
-        } catch (std::runtime_error e) {
+        } catch (std::runtime_error &e) {
             print(e.what());
             print("Попробуйте другой путь");
         }

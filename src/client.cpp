@@ -9,8 +9,6 @@
 #include <string>
 #include <thread>
 
-#include "../headers/logger.h"
-#include "../headers/utils.h"
 #include "../headers/print.h"
 
 
@@ -50,7 +48,7 @@ void Client::loggerInit(std::string line) {
 		std::string defaultLogLevel = argsLoggerInit[1];
 		try {
 			logLevel = strToLogLevel(defaultLogLevel);
-		} catch (std::invalid_argument) {
+		} catch (std::invalid_argument&) {
 			throw std::invalid_argument(RED("Ошибка.") 
 				+ "Не существует такого типа loglevel");
 		}
@@ -59,7 +57,7 @@ void Client::loggerInit(std::string line) {
 	 logger =
 		std::make_shared<Logger>(argsLoggerInit[0], logLevel);
 		queue_worker = std::thread(&Client::worker, this, logger);
-	} catch(std::runtime_error e) {
+	} catch(std::runtime_error &e) {
 		throw e;
 	}
 	
@@ -114,7 +112,7 @@ void Client::changePriorityLogLevel(std::vector<std::string> args) {
 		LogLevel loglevel;
 		try {
 			loglevel = strToLogLevel(args[1]);
-		} catch (std::invalid_argument) {
+		} catch (std::invalid_argument&) {
 			throw std::invalid_argument(RED("Ошибка.") + 
 			"Неизвестный тип LogLevel. Текущий приоритет: " +
 				  logLevelToStr(logger->getPriorityLogLevel()));
