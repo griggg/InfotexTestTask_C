@@ -23,8 +23,8 @@ Client::Client() {
 /**
  * @brief Конструктор с логгером.
  * Можно подменить логгер на мок для тестов
- * 
- * @param customLogger ILogger 
+ *
+ * @param customLogger ILogger
  */
 Client::Client(std::shared_ptr<ILogger> customLogger) {
 	logger = customLogger;
@@ -35,7 +35,7 @@ Client::Client(std::shared_ptr<ILogger> customLogger) {
  * @brief Деструктор
  * Перед тем как удалить condition variable и другие memory location
  * которые использует поток-воркер, он должен уведомить его, что работа
- * прекращается и заджоинить его 
+ * прекращается и заджоинить его
  */
 Client::~Client() {
 	{
@@ -50,11 +50,11 @@ Client::~Client() {
 }
 
 /**
- * @brief Инициализирует логгер и поток воркер, 
+ * @brief Инициализирует логгер и поток воркер,
  * обрабатывающий команды лог от пользователя
- * 
+ *
  * Пример: client.loggerInit("log.txt INFO");
- * 
+ *
  * @param line std::string строка, полученная от пользователя
  * @throw std::invalid_argument Если строка не корректная для команды
  * @throw std::runtime_error Если не удалось создать логгер
@@ -96,7 +96,7 @@ void Client::loggerInit(std::string line) {
  * @brief Обработчик команд от пользователя
  * Получает уведомление, когда добавляется сообщение,
  * забирает сообщения из очереди и обрабатывает их
- * 
+ *
  * @param logger std::shared_ptr<ILogger>
  */
 void Client::worker(std::shared_ptr<ILogger> logger) {
@@ -120,7 +120,7 @@ void Client::worker(std::shared_ptr<ILogger> logger) {
 							  << logLevelToStr(logger->getPriorityLogLevel())
 							  << std::endl;
 				}
-			} catch (const std::exception &e) {
+			} catch (const std::runtime_error &e) {
 				print(e.what());
 			}
 		}
@@ -129,7 +129,7 @@ void Client::worker(std::shared_ptr<ILogger> logger) {
 
 /**
  * @brief Обработчик пользовательского ввода команды log
- * 
+ *
  * @param args Вектор строк. Аргументы пользователя
  * Например {"log", "message", "INFO"}
  * @throw std::invalid_argument если некорректные аргументы
@@ -159,7 +159,7 @@ void Client::log(std::vector<std::string> args) {
 /**
  * @brief Обработчик пользовательского ввода команды cdp
  * Меняет приоритет сообщений у логгера.
- * 
+ *
  * @param args Вектор строк. Аргументы пользователя
  * Например {"cdp", "INFO"}
  * @throw std::invalid_argument если некорректные аргументы

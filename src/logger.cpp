@@ -14,8 +14,8 @@
  * @param filename Строка название файла в который будут записываться логи
  * @param priorityLogLevel LogLevel приоритет сообщений. Сообщения с важностью
  * LogLevel меньше чем приоритет будут игнорироваться.
- * 
- * @throw std::runtime_error Если не удастся открыть файл для записи по 
+ *
+ * @throw std::runtime_error Если не удастся открыть файл для записи по
  * переданному пути filename
  */
 Logger::Logger(std::string filename, LogLevel priorityLogLevel) {
@@ -28,7 +28,6 @@ Logger::Logger(std::string filename, LogLevel priorityLogLevel) {
 								 this->filename);
 	}
 }
-
 
 /**
  * @brief Функция для получения текущего времени
@@ -51,6 +50,9 @@ std::string getCurrentTime() {
  *
  * @param message сообщение для логирования
  * @param logLevel важность сообщения
+ *
+ * @return bool было ли записано сообщение в файл
+ * Зависит от важности и текущего приоритета логгера
  */
 bool Logger::log(std::string message, LogLevel logLevel) {
 	std::lock_guard<std::mutex> lk(this->mtx);
@@ -58,7 +60,9 @@ bool Logger::log(std::string message, LogLevel logLevel) {
 	if (logLevel >= this->priorityLogLevel) {
 		file << message << wordSeparator << logLevelToStr(logLevel)
 			 << wordSeparator << getCurrentTime() << lineSeparator;
+		
 		file.flush();
+
 		return true;
 	}
 	return false;

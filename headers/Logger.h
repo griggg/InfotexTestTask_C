@@ -16,11 +16,11 @@ class Logger : public ILogger {
 
 	Logger(std::string filename, LogLevel priority);
 
-	bool log(std::string message, LogLevel logLevel);
+	bool log(std::string message, LogLevel logLevel) override;
 
-	void setPriorityLogLevel(LogLevel loglevel);
+	void setPriorityLogLevel(LogLevel loglevel) override;
 
-	LogLevel getPriorityLogLevel();
+	LogLevel getPriorityLogLevel() override;
 
 	~Logger();
 
