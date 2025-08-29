@@ -12,7 +12,6 @@ all: client test_logger
 $(BUILD_DIR)/liblogger.so : $(SRC_DIR)/logger.cpp
 	$(CC) -fPIC -shared $< -o $(BUILD_DIR)/liblogger.so 
 	
-
 client: $(SRC_DIR)/client.cpp $(BUILD_DIR)/liblogger.so
 	$(CC) $^ -Lbuild -llogger -Wl,-rpath=build -o $(BUILD_DIR)/$@
 
@@ -21,3 +20,6 @@ test_logger: $(SRC_DIR)/logger.cpp $(TEST_DIR)/test_logger.cpp
 
 clean:
 	rm -r build/*
+
+client_sntz: $(SRC_DIR)/client.cpp $(BUILD_DIR)/liblogger.so
+	$(CC) $^ -Lbuild -llogger -Wl,-rpath=build -o $(BUILD_DIR)/$@ -fsanitize=thread

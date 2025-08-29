@@ -5,45 +5,38 @@
 #include <queue>
 #include <string>
 #include <thread>
+#include <atomic>
 
 #include "../headers/logger.h"
 #include "../headers/utils.h"
 
-std::condition_variable cv;
-std::mutex queue_mutex;
-bool running = true;
-std::queue<std::pair<std::string, LogLevel>> queue_tasks;
+
 
 void print(std::string msg) { std::cout << msg << std::endl; }
 
-void worker(std::shared_ptr<Logger> logger) {
-	while (running) {
-		std::unique_lock<std::mutex> lk(queue_mutex);
-		cv.wait(lk, [] {
-			return running == false || queue_tasks.empty() == false;
-		});
-		while (!queue_tasks.empty()) {
-			auto [msg, loglevel] = queue_tasks.front();
-			queue_tasks.pop();
-			if (logger->log(msg, loglevel)) {
-				print("Лог записан");
-			} else {
-				print("Лог не записан");
-			}
+class Client {
+public:
+	Client(std::string line) {
+        logger = loggerInit(line);
+        queue_worker = std::thread(&Client::worker, this, logger);
+	};
+
+	~Client() {
+		{
+			std::lock_guard lk(mutex);
+			running.store(false);
+		}
+		cv.notify_all();
+
+		if (queue_worker.joinable()) {
+			queue_worker.join();
 		}
 	}
-}
 
-class Client {
-	Client() {
-
-	};
+	
 
 	std::shared_ptr<Logger> loggerInit(std::string line) {
 		std::vector<std::string> argsLoggerInit = split(line, ' ');
-
-		// std::ofstream file(argsLoggerInit[0]);
-		// if (!file.is_open()) return nullptr;
 		std::string filename = argsLoggerInit[0];
 
 		LogLevel logLevel;
@@ -64,17 +57,83 @@ class Client {
 
 		return logger;
 	}
+
+	void worker(std::shared_ptr<Logger> logger) {
+		while (true) {
+			std::unique_lock<std::mutex> lk(mutex);
+			cv.wait(lk, [this] {
+				return running.load() == false || this->queue_tasks.empty() == false;
+			});
+			if (running.load() == false) break;
+			while (!queue_tasks.empty()) {
+				auto [msg, loglevel] = queue_tasks.front();
+				queue_tasks.pop();
+				if (logger->log(msg, loglevel)) {
+					print("Лог записан");
+				} else {
+					print("Лог не записан");
+				}
+			}
+		}
+	}
+
+    void log(std::vector<std::string> args) {
+		std::lock_guard<std::mutex> lk(mutex);
+
+        if (args.size() == 3) {
+				queue_tasks.push({args[1], strToLogLevel(args[2])});
+				cv.notify_all();
+			} else if (args.size() == 2) {
+				queue_tasks.push({args[1], logger->getDefaultLogLevel()});
+
+				print(
+					"Вы не указали аргумент уровня важности сообщения. Выбран" +
+					logLevelToStr(logger->getDefaultLogLevel()));
+				cv.notify_all();
+			} else {
+				print(
+					"Ошибка; отсутствует аргумент. log <message> "
+					"<INFO/WARNING/ERROR>");
+			}
+    }
+
+    bool changePriorityLogLevel(std::vector<std::string> args) {
+		std::lock_guard<std::mutex> lk(mutex);
+        if (args.size() == 2) {
+				LogLevel loglevel;
+				try {
+					loglevel = strToLogLevel(args[1]);
+				} catch (std::invalid_argument) {
+					print(
+						"Неизвестный тип LogLevel. logger defaultLogLevel: " +
+						logLevelToStr(logger->getDefaultLogLevel()));
+					return false;
+				}
+				
+				logger->setDefaultLogLevel(loglevel);
+                return true;
+			}
+        return false;
+    }
+
+private:
+    std::shared_ptr<Logger> logger;
+    std::queue<std::pair<std::string, LogLevel>> queue_tasks;
+
+	std::condition_variable cv;
+	std::mutex mutex;
+	std::mutex cv_mutex;
+	std::atomic<bool> running{true};
+	std::thread queue_worker;
 };
 
 int main() {
+
 	print("Инициализация Logger");
 	print("Напишите <logFileName> <defaultLogLevel> (по умолч. INFO)");
 	std::string line;
 	std::getline(std::cin, line);
-	std::shared_ptr<Logger> logger = loggerInit(line);
-
-	std::thread queue_worker(worker, logger);
-	queue_worker.detach();
+    Client client(line);
 
 	print("");
 	print("Меню логгера");
@@ -91,38 +150,11 @@ int main() {
 			continue;
 		}
 		if (args[0] == "log") {
-			if (args.size() == 3) {
-				queue_tasks.push({args[1], strToLogLevel(args[2])});
-				cv.notify_all();
-			} else if (args.size() == 2) {
-				queue_tasks.push({args[1], logger->getDefaultLogLevel()});
-				print(
-					"Вы не указали аргумент уровня важности сообщения. Выбран" +
-					logLevelToStr(logger->getDefaultLogLevel()));
-				cv.notify_all();
-			} else {
-				print(
-					"Ошибка; отсутствует аргумент. log <message> "
-					"<INFO/WARNING/ERROR>");
-			}
+			client.log(args);
 		} else if (args[0] == "cdl") {
-			if (args.size() == 2) {
-				LogLevel loglevel;
-				try {
-					loglevel = strToLogLevel(args[1]);
-				} catch (std::invalid_argument) {
-					print(
-						"Неизвестный тип LogLevel. logger defaultLogLevel = " +
-						logLevelToStr(logger->getDefaultLogLevel()));
-					continue;
-				}
-
-				logger->setDefaultLogLevel(loglevel);
-			}
+			client.changePriorityLogLevel(args);
 		} else if (args[0] == "exit") {
 			if (args.size() == 1) {
-				running = false;
-				cv.notify_all();
 				break;
 			}
 		} else {
