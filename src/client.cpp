@@ -46,7 +46,7 @@ public:
 		} else {
 			std::string defaultLogLevel = argsLoggerInit[1];
 			try {
-				logLevel = strToLogLevel(defaultLogLevel);
+				logLevel = Logger::strToLogLevel(defaultLogLevel);
 			} catch (std::invalid_argument) {
 				return nullptr;
 			}
@@ -69,7 +69,7 @@ public:
 				auto [msg, loglevel] = queue_tasks.front();
 				queue_tasks.pop();
 				if (logger->log(msg, loglevel)) {
-					print("Лог записан");
+					print("Лог успешно записан");
 				} else {
 					print("Лог не записан");
 				}
@@ -81,19 +81,15 @@ public:
 		std::lock_guard<std::mutex> lk(mutex);
 
         if (args.size() == 3) {
-				queue_tasks.push({args[1], strToLogLevel(args[2])});
+				queue_tasks.push({args[1], Logger::strToLogLevel(args[2])});
 				cv.notify_all();
 			} else if (args.size() == 2) {
-				queue_tasks.push({args[1], logger->getDefaultLogLevel()});
+				queue_tasks.push({args[1], LogLevel::INFO});
 
-				print(
-					"Вы не указали аргумент уровня важности сообщения. Выбран" +
-					logLevelToStr(logger->getDefaultLogLevel()));
+				print("Вы не указали аргумент уровня важности сообщения. Выбран  INFO");
 				cv.notify_all();
 			} else {
-				print(
-					"Ошибка; отсутствует аргумент. log <message> "
-					"<INFO/WARNING/ERROR>");
+				print("Ошибка. отсутствует сообщение.");
 			}
     }
 
@@ -102,15 +98,15 @@ public:
         if (args.size() == 2) {
 				LogLevel loglevel;
 				try {
-					loglevel = strToLogLevel(args[1]);
+					loglevel = Logger::strToLogLevel(args[1]);
 				} catch (std::invalid_argument) {
 					print(
-						"Неизвестный тип LogLevel. logger defaultLogLevel: " +
-						logLevelToStr(logger->getDefaultLogLevel()));
+						"Неизвестный тип LogLevel. Текущий приоритет: " +
+						Logger::logLevelToStr(logger->getPriorityLogLevel()));
 					return false;
 				}
 				
-				logger->setDefaultLogLevel(loglevel);
+				logger->setPriorityLogLevel(loglevel);
                 return true;
 			}
         return false;
@@ -122,7 +118,6 @@ private:
 
 	std::condition_variable cv;
 	std::mutex mutex;
-	std::mutex cv_mutex;
 	std::atomic<bool> running{true};
 	std::thread queue_worker;
 };
@@ -130,17 +125,17 @@ private:
 int main() {
 
 	print("Инициализация Logger");
-	print("Напишите <logFileName> <defaultLogLevel> (по умолч. INFO)");
+	print("Напишите <имя файла логгера> <уровень приоритета> (по умолч. INFO)");
 	std::string line;
 	std::getline(std::cin, line);
     Client client(line);
 
-	print("");
+	print("------------");
 	print("Меню логгера");
-	print("log <message> <INFO/WARNING/ERROR>");
-	print("cdl <INFO/WARNING/ERROR>");
-	print("exit");
-	print("");
+	print("1) log <сообщение> <приоритет=INFO/WARNING/ERROR> (по умолч. INFO) - Записать сообщение");
+	print("2) cdp <INFO/WARNING/ERROR> - Сменить уровень приоритета у логгера");
+	print("3) exit - завершить работу");
+	print("------------");
 
 	while (1) {
 		std::getline(std::cin, line);
@@ -151,14 +146,14 @@ int main() {
 		}
 		if (args[0] == "log") {
 			client.log(args);
-		} else if (args[0] == "cdl") {
+		} else if (args[0] == "cdp") {
 			client.changePriorityLogLevel(args);
 		} else if (args[0] == "exit") {
 			if (args.size() == 1) {
 				break;
 			}
 		} else {
-			continue;
+			print("Неизвестная команда: " + args[0]);
 		}
 	}
 }

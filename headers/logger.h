@@ -11,46 +11,28 @@ enum class LogLevel {
 	ERROR = 2,
 };
 
-static std::string logLevelToStr(LogLevel loglevel) {
-	switch (loglevel) {
-		case LogLevel::INFO:
-			return "INFO";
-			break;
-		case LogLevel::WARNING:
-			return "WARNING";
-			break;
-		case LogLevel::ERROR:
-			return "ERROR";
-			break;
-		default:
-			return "";
-	}
-}
-
-static LogLevel strToLogLevel(std::string str) {
-	if (str == "INFO") return LogLevel::INFO;
-	if (str == "WARNING") return LogLevel::WARNING;
-	if (str == "ERROR") return LogLevel::ERROR;
-	throw std::invalid_argument("Незивестный LogLevel");
-}
 
 class Logger {
    public:
 	const char lineSeparator = '\n';
 	const char wordSeparator = '|';
 
-	Logger(std::string filename, LogLevel defaultLogLevel);
+	Logger(std::string filename, LogLevel priority);
 
 	bool log(std::string message, LogLevel logLevel);
 
-	void setDefaultLogLevel(LogLevel loglevel);
+	void setPriorityLogLevel(LogLevel loglevel);
 
-	LogLevel getDefaultLogLevel();
+	static std::string logLevelToStr(LogLevel loglevel);
+
+	static LogLevel strToLogLevel(std::string str);
+
+	LogLevel getPriorityLogLevel();
 
 	~Logger();
 
    private:
-	LogLevel defaultLogLevel;
+	LogLevel priorityLogLevel;
 	std::mutex mtx;
 	std::string filename;
 	std::ofstream file;

@@ -5,9 +5,9 @@
 #include <iomanip>
 #include <sstream>
 
-Logger::Logger(std::string filename, LogLevel defaultLogLevel) {
+Logger::Logger(std::string filename, LogLevel priorityLogLevel) {
 	this->filename = filename;
-	this->defaultLogLevel = defaultLogLevel;
+	this->priorityLogLevel = priorityLogLevel;
 	file = std::ofstream(this->filename);
 }
 
@@ -24,7 +24,7 @@ std::string getCurrentTime() {
 bool Logger::log(std::string message, LogLevel logLevel) {
 	std::lock_guard<std::mutex> lk(this->mtx);
 
-	if (logLevel >= this->defaultLogLevel) {
+	if (logLevel >= this->priorityLogLevel) {
 		file << message << wordSeparator << logLevelToStr(logLevel)
 			 << wordSeparator << getCurrentTime() << lineSeparator;
 		file.flush();
@@ -33,9 +33,32 @@ bool Logger::log(std::string message, LogLevel logLevel) {
 	return false;
 }
 
-void Logger::setDefaultLogLevel(LogLevel loglevel) {
-	this->defaultLogLevel = loglevel;
+void Logger::setPriorityLogLevel(LogLevel loglevel) {
+	this->priorityLogLevel = loglevel;
 }
 
-LogLevel Logger::getDefaultLogLevel() { return defaultLogLevel; }
+std::string Logger::logLevelToStr(LogLevel loglevel) {
+	switch (loglevel) {
+		case LogLevel::INFO:
+			return "INFO";
+			break;
+		case LogLevel::WARNING:
+			return "WARNING";
+			break;
+		case LogLevel::ERROR:
+			return "ERROR";
+			break;
+		default:
+			return "";
+	}
+}
+
+LogLevel Logger::strToLogLevel(std::string str) {
+	if (str == "INFO") return LogLevel::INFO;
+	if (str == "WARNING") return LogLevel::WARNING;
+	if (str == "ERROR") return LogLevel::ERROR;
+	throw std::invalid_argument("Незивестный LogLevel");
+}
+
+LogLevel Logger::getPriorityLogLevel() { return priorityLogLevel; }
 Logger::~Logger() { file.close(); }
