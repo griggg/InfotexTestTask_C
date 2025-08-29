@@ -1,3 +1,5 @@
+#include "../headers/Client.h"
+
 #include <atomic>
 #include <condition_variable>
 #include <fstream>
@@ -7,18 +9,34 @@
 #include <string>
 #include <thread>
 
-#include "../headers/Client.h"
 #include "../headers/Print.h"
 
+/**
+ * @brief Конструктор по умолчанию
+ * Если использовать его, то потом нужно вызывать Client::loggerInit(),
+ * чтобы инициализировать логгер
+ */
 Client::Client() {
 
 };
 
+/**
+ * @brief Конструктор с логгером.
+ * Можно подменить логгер на мок для тестов
+ * 
+ * @param customLogger ILogger 
+ */
 Client::Client(std::shared_ptr<ILogger> customLogger) {
 	logger = customLogger;
 	queue_worker = std::thread(&Client::worker, this, logger);
 }
 
+/**
+ * @brief Деструктор
+ * Перед тем как удалить condition variable и другие memory location
+ * которые использует поток-воркер, он должен уведомить его, что работа
+ * прекращается и заджоинить его 
+ */
 Client::~Client() {
 	{
 		std::lock_guard lk(mutex);
@@ -31,6 +49,16 @@ Client::~Client() {
 	}
 }
 
+/**
+ * @brief Инициализирует логгер и поток воркер, 
+ * обрабатывающий команды лог от пользователя
+ * 
+ * Пример: client.loggerInit("log.txt INFO");
+ * 
+ * @param line std::string строка, полученная от пользователя
+ * @throw std::invalid_argument Если строка не корректная для команды
+ * @throw std::runtime_error Если не удалось создать логгер
+ */
 void Client::loggerInit(std::string line) {
 	std::vector<std::string> argsLoggerInit = split(line, ' ');
 
@@ -64,6 +92,13 @@ void Client::loggerInit(std::string line) {
 	}
 }
 
+/**
+ * @brief Обработчик команд от пользователя
+ * Получает уведомление, когда добавляется сообщение,
+ * забирает сообщения из очереди и обрабатывает их
+ * 
+ * @param logger std::shared_ptr<ILogger>
+ */
 void Client::worker(std::shared_ptr<ILogger> logger) {
 	while (true) {
 		std::unique_lock<std::mutex> lk(mutex);
@@ -80,18 +115,25 @@ void Client::worker(std::shared_ptr<ILogger> logger) {
 					std::cout << GREEN("Лог успешно записан") << std::endl;
 				} else {
 					std::cout << YELLOW("Лог не записан.") << "Важность "
-							<< logLevelToStr(loglevel)
-							<< "меньше приоритета логгера "
-							<< logLevelToStr(logger->getPriorityLogLevel())
-							<< std::endl;
+							  << logLevelToStr(loglevel)
+							  << "меньше приоритета логгера "
+							  << logLevelToStr(logger->getPriorityLogLevel())
+							  << std::endl;
 				}
-			} catch (const std::exception& e) {
+			} catch (const std::exception &e) {
 				print(e.what());
 			}
 		}
 	}
 }
 
+/**
+ * @brief Обработчик пользовательского ввода команды log
+ * 
+ * @param args Вектор строк. Аргументы пользователя
+ * Например {"log", "message", "INFO"}
+ * @throw std::invalid_argument если некорректные аргументы
+ */
 void Client::log(std::vector<std::string> args) {
 	std::lock_guard<std::mutex> lk(mutex);
 
@@ -114,6 +156,14 @@ void Client::log(std::vector<std::string> args) {
 	}
 }
 
+/**
+ * @brief Обработчик пользовательского ввода команды cdp
+ * Меняет приоритет сообщений у логгера.
+ * 
+ * @param args Вектор строк. Аргументы пользователя
+ * Например {"cdp", "INFO"}
+ * @throw std::invalid_argument если некорректные аргументы
+ */
 void Client::changePriorityLogLevel(std::vector<std::string> args) {
 	std::lock_guard<std::mutex> lk(mutex);
 	if (args.size() == 2) {
