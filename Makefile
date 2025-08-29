@@ -46,7 +46,7 @@ $(TEST_CLIENT): $(TEST_CLIENT_SRC) $(BUILD_DIR)/client.o $(LOGGER_LIB)
 
 test_client: $(TEST_CLIENT)
 
-client_sntz: $(SRC_DIR)/client.cpp $(LOGGER_LIB)
+client_sntz: $(BUILD_DIR)/app.o $(BUILD_DIR)/client.o $(LOGGER_LIB)
 	$(CC) $(CFLAGS) $^ -L$(BUILD_DIR) -llogger -Wl,-rpath=$(BUILD_DIR) -fsanitize=thread -o $(BUILD_DIR)/client_sntz
 
 clean:

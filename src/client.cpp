@@ -1,5 +1,3 @@
-#include "../headers/Client.h"
-
 #include <atomic>
 #include <condition_variable>
 #include <fstream>
@@ -9,6 +7,7 @@
 #include <string>
 #include <thread>
 
+#include "../headers/Client.h"
 #include "../headers/Print.h"
 
 Client::Client() {
@@ -76,14 +75,18 @@ void Client::worker(std::shared_ptr<ILogger> logger) {
 		while (!queue_tasks.empty()) {
 			auto [msg, loglevel] = queue_tasks.front();
 			queue_tasks.pop();
-			if (logger->log(msg, loglevel)) {
-				std::cout << GREEN("Лог успешно записан") << std::endl;
-			} else {
-				std::cout << YELLOW("Лог не записан.") << "Важность "
-						  << logLevelToStr(loglevel)
-						  << "меньше приоритета логгера "
-						  << logLevelToStr(logger->getPriorityLogLevel())
-						  << std::endl;
+			try {
+				if (logger->log(msg, loglevel)) {
+					std::cout << GREEN("Лог успешно записан") << std::endl;
+				} else {
+					std::cout << YELLOW("Лог не записан.") << "Важность "
+							<< logLevelToStr(loglevel)
+							<< "меньше приоритета логгера "
+							<< logLevelToStr(logger->getPriorityLogLevel())
+							<< std::endl;
+				}
+			} catch (const std::exception& e) {
+				print(e.what());
 			}
 		}
 	}
