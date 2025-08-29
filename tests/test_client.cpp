@@ -18,9 +18,12 @@ void testValidLogging() {
     auto mockLogger = std::make_shared<MockLogger>();
     Client client(mockLogger);
 
-    client.log({"log", "Hello world", "WARNING"});
-    client.log({"log", "Default level message"});
-
+    try {
+        client.log({"log", "Hello world", "WARNING"});
+        client.log({"log", "Default level message"});
+    } catch (...) {
+        
+    }
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     {
@@ -39,8 +42,11 @@ void testInvalidLogLevelInLog() {
     auto mockLogger = std::make_shared<MockLogger>();
     Client client(mockLogger);
 
-    client.log({"log", "Message with bad level", "BADLEVEL"});
+    try {
+        client.log({"log", "Message with bad level", "BADLEVEL"});
+    } catch (...) {
 
+    }
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     {
@@ -90,7 +96,11 @@ void testLogWithoutMessage() {
     auto mockLogger = std::make_shared<MockLogger>();
     Client client(mockLogger);
 
-    client.log({"log"});
+    try {
+        client.log({"log"});
+    } catch (...) {
+
+    } 
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     {
@@ -104,16 +114,13 @@ void testLogWithoutMessage() {
 void testEmptyCommand() {
     auto mockLogger = std::make_shared<MockLogger>();
     Client client(mockLogger);
-
-    client.log({});
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    {
-        std::lock_guard<std::mutex> lock(mockLogger->mtx);
-        assert(mockLogger->logs.empty());
+    
+    try {
+        client.log({});
+        assert(false);
+    } catch (std::invalid_argument) {
+        std::cout << "testEmptyCommand пройден\n";
     }
-
-    std::cout << "testEmptyCommand пройден\n";
 }
 
 void testLoggerInit() {
@@ -136,6 +143,17 @@ void testLoggerInitInvalidLevel() {
     }
 }
 
+void testLoggerLogInvalidSizeArgs() {
+    Client client;
+    client.loggerInit("testlog.log INFO");
+    try {
+        client.log({"testlog.log", "hello", "ERROR", "123"});
+        assert(false);
+    } catch (const std::invalid_argument&) {
+        std::cout << "testLoggerLogInvalidSizeArgs пройден\n";
+    }
+}
+
 int main() {
     testValidLogging();
     testInvalidLogLevelInLog();
@@ -146,6 +164,7 @@ int main() {
     testEmptyCommand();
     testLoggerInit();
     testLoggerInitInvalidLevel();
+    testLoggerLogInvalidSizeArgs();
 
     std::cout << "Все тесты пройдены!\n";
     return 0;

@@ -51,7 +51,8 @@ void Client::loggerInit(std::string line) {
 		try {
 			logLevel = strToLogLevel(defaultLogLevel);
 		} catch (std::invalid_argument) {
-			throw std::invalid_argument("Ошибка. Не существует такого типа loglevel");
+			throw std::invalid_argument(RED("Ошибка.") 
+				+ "Не существует такого типа loglevel");
 		}
 	}
 	try {
@@ -92,13 +93,9 @@ void Client::log(std::vector<std::string> args) {
 
 	if (args.size() == 3) {
 		LogLevel loglevel;
-		try {
-			loglevel = strToLogLevel(args[2]);
-			queue_tasks.push({args[1], loglevel});
-			cv.notify_all();
-		} catch (std::invalid_argument err) {
-			print(err.what());
-		}
+		loglevel = strToLogLevel(args[2]);
+		queue_tasks.push({args[1], loglevel});
+		cv.notify_all();
 	} else if (args.size() == 2) {
 		queue_tasks.push({args[1], LogLevel::INFO});
 
@@ -107,7 +104,7 @@ void Client::log(std::vector<std::string> args) {
 
 		cv.notify_all();
 	} else {
-		std::cout << RED("Ошибка.") << " Отсутствует сообщение." << std::endl;
+		throw std::invalid_argument(RED("Ошибка.") +  " Некорректное число аргументов");
 	}
 }
 
