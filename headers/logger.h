@@ -4,15 +4,11 @@
 #include <iostream>
 #include <mutex>
 #include <string>
+#include <vector>
+#include "ILogger.h"
+#include "LogLevel.h"
 
-enum class LogLevel {
-	INFO = 0,
-	WARNING = 1,
-	ERROR = 2,
-};
-
-
-class Logger {
+class Logger : public ILogger {
    public:
 	const char lineSeparator = '\n';
 	const char wordSeparator = '|';
@@ -22,10 +18,6 @@ class Logger {
 	bool log(std::string message, LogLevel logLevel);
 
 	void setPriorityLogLevel(LogLevel loglevel);
-
-	static std::string logLevelToStr(LogLevel loglevel);
-
-	static LogLevel strToLogLevel(std::string str);
 
 	LogLevel getPriorityLogLevel();
 
@@ -37,3 +29,4 @@ class Logger {
 	std::string filename;
 	std::ofstream file;
 };
+

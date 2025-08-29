@@ -8,7 +8,6 @@
 
 
 
-
 void TestWarningPriority() {
     /*
         Тест проверяет корректность обработки уровня важности
@@ -88,9 +87,6 @@ void TestErrorPriority() {
 
 }
 
-void TestChangeDefaultLogLevel() {
-    
-}
 
 int main() {
     TestWarningPriority();

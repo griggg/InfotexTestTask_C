@@ -8,7 +8,7 @@
 Logger::Logger(std::string filename, LogLevel priorityLogLevel) {
 	this->filename = filename;
 	this->priorityLogLevel = priorityLogLevel;
-	file = std::ofstream(this->filename);
+	file = std::ofstream("build/"+this->filename);
 }
 
 std::string getCurrentTime() {
@@ -35,29 +35,6 @@ bool Logger::log(std::string message, LogLevel logLevel) {
 
 void Logger::setPriorityLogLevel(LogLevel loglevel) {
 	this->priorityLogLevel = loglevel;
-}
-
-std::string Logger::logLevelToStr(LogLevel loglevel) {
-	switch (loglevel) {
-		case LogLevel::INFO:
-			return "INFO";
-			break;
-		case LogLevel::WARNING:
-			return "WARNING";
-			break;
-		case LogLevel::ERROR:
-			return "ERROR";
-			break;
-		default:
-			return "";
-	}
-}
-
-LogLevel Logger::strToLogLevel(std::string str) {
-	if (str == "INFO") return LogLevel::INFO;
-	if (str == "WARNING") return LogLevel::WARNING;
-	if (str == "ERROR") return LogLevel::ERROR;
-	throw std::invalid_argument("Незивестный LogLevel");
 }
 
 LogLevel Logger::getPriorityLogLevel() { return priorityLogLevel; }

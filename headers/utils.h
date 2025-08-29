@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-std::vector<std::string> split(std::string str, const char& separator) {
+inline std::vector<std::string> split(std::string str, const char& separator) {
 	std::vector<std::string> tokens;
 	size_t start = 0;
 	size_t end = str.find(separator, start);
