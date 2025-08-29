@@ -60,7 +60,7 @@ bool Logger::log(std::string message, LogLevel logLevel) {
 	if (logLevel >= this->priorityLogLevel) {
 		file << message << wordSeparator << logLevelToStr(logLevel)
 			 << wordSeparator << getCurrentTime() << lineSeparator;
-		
+
 		file.flush();
 
 		return true;

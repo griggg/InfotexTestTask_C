@@ -9,7 +9,7 @@
 
 void TestWarningPriority() {
 	/*
-		Тест проверяет корректность обработки уровня важности
+		Тест проверяет логирование с приоритетом Warning у логгера
 	*/
 	std::cout << "TestWarningPriority" << std::endl;
 
@@ -34,6 +34,10 @@ void TestWarningPriority() {
 }
 
 void TestInfoPriority() {
+	/*
+		Тест проверяет логирование с приоритетом Info у логгера
+	*/
+
 	std::cout << "TestInfoPriority" << std::endl;
 
 	Logger log("log2.txt", LogLevel::INFO);
@@ -61,6 +65,10 @@ void TestInfoPriority() {
 }
 
 void TestErrorPriority() {
+	/*
+		Тест проверяет логирование с приоритетом Error у логгера
+	*/
+
 	std::cout << "TestErrorPriority" << std::endl;
 
 	Logger log("log.txt", LogLevel::ERROR);
@@ -82,6 +90,10 @@ void TestErrorPriority() {
 }
 
 void TestLoggerFileOpenError() {
+	/*
+		Тест проверяет ошибку открытия файла по заданному пути
+	*/
+
 	std::cout << "TestLoggerFileOpenError" << std::endl;
 
 	try {

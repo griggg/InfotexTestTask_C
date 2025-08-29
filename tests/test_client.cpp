@@ -14,6 +14,9 @@
 #include "../headers/Utils.h"
 
 void testValidLogging() {
+	/*
+		Тест проверяет обработчик комманд с корректными аргументами
+	*/
 	auto mockLogger = std::make_shared<MockLogger>();
 	Client client(mockLogger);
 
@@ -37,6 +40,10 @@ void testValidLogging() {
 }
 
 void testInvalidLogLevelInLog() {
+	/*
+		Тест проверяет обработчик команды log с некорректным
+		уровнем важности
+	*/
 	auto mockLogger = std::make_shared<MockLogger>();
 	Client client(mockLogger);
 
@@ -55,6 +62,9 @@ void testInvalidLogLevelInLog() {
 }
 
 void testChangePrioritySuccess() {
+	/*
+		Тест проверяет обработчик команды смены приоритета логгера
+	*/
 	auto mockLogger = std::make_shared<MockLogger>();
 	Client client(mockLogger);
 
@@ -66,6 +76,9 @@ void testChangePrioritySuccess() {
 }
 
 void testChangePriorityThrowsOnInvalid() {
+	/*
+		Тест проверяет client::cdp с некорректным уровнем приоритета
+	*/
 	auto mockLogger = std::make_shared<MockLogger>();
 	Client client(mockLogger);
 
@@ -78,6 +91,9 @@ void testChangePriorityThrowsOnInvalid() {
 }
 
 void testChangePriorityThrowsOnMissingArgs() {
+	/*
+		Тест проверяет client::cdp без аргументов
+	*/
 	auto mockLogger = std::make_shared<MockLogger>();
 	Client client(mockLogger);
 
@@ -90,6 +106,9 @@ void testChangePriorityThrowsOnMissingArgs() {
 }
 
 void testLogWithoutMessage() {
+	/*
+		Тест проверяет обработку client::log пустого сообщения
+	*/
 	auto mockLogger = std::make_shared<MockLogger>();
 	Client client(mockLogger);
 
@@ -108,6 +127,9 @@ void testLogWithoutMessage() {
 }
 
 void testEmptyCommand() {
+	/*
+		Тест проверяет обработку client::log без аргументов
+	*/
 	auto mockLogger = std::make_shared<MockLogger>();
 	Client client(mockLogger);
 
@@ -120,6 +142,9 @@ void testEmptyCommand() {
 }
 
 void testLoggerInit() {
+	/*
+		Тест проверяет работу  client::loggerInit с корректными аргументами
+	*/
 	Client client;
 	try {
 		client.loggerInit("testlog.log INFO");
@@ -130,6 +155,9 @@ void testLoggerInit() {
 }
 
 void testLoggerInitInvalidLevel() {
+	/*
+		Тест проверяет работу  client::loggerInit с не корректными аргументами
+	*/
 	Client client;
 	try {
 		client.loggerInit("testlog.log BADLEVEL");
@@ -140,6 +168,9 @@ void testLoggerInitInvalidLevel() {
 }
 
 void testLoggerLogInvalidSizeArgs() {
+	/*
+		Тест проверяет работу  client::log с не корректными аргументами
+	*/
 	Client client;
 	client.loggerInit("testlog.log INFO");
 	try {
