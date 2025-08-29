@@ -8,7 +8,6 @@
 
 
 
-
 void TestWarningPriority() {
     /*
         Тест проверяет корректность обработки уровня важности
@@ -88,12 +87,20 @@ void TestErrorPriority() {
 
 }
 
-void TestChangeDefaultLogLevel() {
-    
+void TestLoggerFileOpenError() {
+    std::cout << "TestLoggerFileOpenError" << std::endl;
+
+    try {
+        Logger log("non_existent_dir/log.txt", LogLevel::INFO);
+        assert(false); 
+    } catch (const std::runtime_error& e) {
+    }
 }
 
 int main() {
     TestWarningPriority();
     TestInfoPriority();
     TestErrorPriority();
+    TestLoggerFileOpenError();
+    std::cout << "Все тесты пройдены!" << std::endl;
 }
