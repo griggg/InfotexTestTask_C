@@ -5,14 +5,13 @@
 #include <vector>
 #include <string>
 #include <mutex>
+#include <memory>
+
 #include "../headers/logger.h"
 #include "../headers/utils.h"
 #include "../headers/client.h"
 #include "../headers/LogLevel.h"
 #include "../headers/MockLogger.h"
-#include <memory>
-
-
 
 
 void testValidLogging() {
@@ -20,7 +19,7 @@ void testValidLogging() {
     Client client(mockLogger);
 
     client.log({"log", "Hello world", "WARNING"});
-    client.log({"log", "Default level message"}); 
+    client.log({"log", "Default level message"});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -29,59 +28,73 @@ void testValidLogging() {
         assert(mockLogger->logs.size() == 2);
         assert(mockLogger->logs[0].first == "Hello world");
         assert(mockLogger->logs[0].second == LogLevel::WARNING);
-
         assert(mockLogger->logs[1].first == "Default level message");
         assert(mockLogger->logs[1].second == LogLevel::INFO);
     }
-    std::cout << "testValidLogging passed\n";
+
+    std::cout << "testValidLogging пройден\n";
 }
 
 void testInvalidLogLevelInLog() {
     auto mockLogger = std::make_shared<MockLogger>();
     Client client(mockLogger);
 
-    try {
-        client.log({"log", "Message with bad level", "BADLEVEL"});
-    } catch (...) {
-        std::cout << "testInvalidLogLevelInLog пройден\n";
-        return;
-    }
+    client.log({"log", "Message with bad level", "BADLEVEL"});
+
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     {
         std::lock_guard<std::mutex> lock(mockLogger->mtx);
         assert(mockLogger->logs.empty());
     }
+
     std::cout << "testInvalidLogLevelInLog пройден\n";
 }
 
-void testChangePrioritySuccessAndFailure() {
+void testChangePrioritySuccess() {
     auto mockLogger = std::make_shared<MockLogger>();
     Client client(mockLogger);
 
-    bool res = client.changePriorityLogLevel({"cdp", "ERROR"});
-    assert(res);
+    client.changePriorityLogLevel({"cdp", "ERROR"});
+
     assert(mockLogger->getPriorityLogLevel() == LogLevel::ERROR);
 
-    res = client.changePriorityLogLevel({"cdp", "NONEXISTENT"});
-    assert(!res);
-    // Приоритет не должен был измениться
-    assert(mockLogger->getPriorityLogLevel() == LogLevel::ERROR);
+    std::cout << "testChangePrioritySuccess пройден\n";
+}
 
-    std::cout << "testChangePrioritySuccessAndFailure пройден\n";
+void testChangePriorityThrowsOnInvalid() {
+    auto mockLogger = std::make_shared<MockLogger>();
+    Client client(mockLogger);
+
+    try {
+        client.changePriorityLogLevel({"cdp", "NONEXISTENT"});
+        assert(false); 
+    } catch (const std::invalid_argument& e) {
+        std::cout << "testChangePriorityThrowsOnInvalid пройден: " << "\n";
+    }
+}
+
+void testChangePriorityThrowsOnMissingArgs() {
+    auto mockLogger = std::make_shared<MockLogger>();
+    Client client(mockLogger);
+
+    try {
+        client.changePriorityLogLevel({"cdp"});
+        assert(false);
+    } catch (const std::invalid_argument& e) {
+        std::cout << "testChangePriorityThrowsOnMissingArgs пройден: " << "\n";
+    }
 }
 
 void testLogWithoutMessage() {
     auto mockLogger = std::make_shared<MockLogger>();
     Client client(mockLogger);
 
-    // Попытка залогировать без сообщения
     client.log({"log"});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     {
         std::lock_guard<std::mutex> lock(mockLogger->mtx);
-        // Логов не должно быть
         assert(mockLogger->logs.empty());
     }
 
@@ -92,7 +105,6 @@ void testEmptyCommand() {
     auto mockLogger = std::make_shared<MockLogger>();
     Client client(mockLogger);
 
-    // Пустой ввод
     client.log({});
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -104,24 +116,36 @@ void testEmptyCommand() {
     std::cout << "testEmptyCommand пройден\n";
 }
 
-void testFileError() {
+void testLoggerInit() {
+    Client client;
+    try {
+        client.loggerInit("testlog.log INFO");
+        std::cout << "testLoggerInit пройден\n";
+    } catch (...) {
+        assert(false);
+    }
+}
 
-    Logger logger("non_existent_dir/test.log", LogLevel::INFO);
-
-    bool result = logger.log("Test message", LogLevel::INFO);
-
-    assert(!result);
-
-    std::cout << "testFileError пройден\n";
+void testLoggerInitInvalidLevel() {
+    Client client;
+    try {
+        client.loggerInit("testlog.log BADLEVEL");
+        assert(false);
+    } catch (const std::invalid_argument&) {
+        std::cout << "testLoggerInitInvalidLevel пройден\n";
+    }
 }
 
 int main() {
     testValidLogging();
     testInvalidLogLevelInLog();
-    testChangePrioritySuccessAndFailure();
+    testChangePrioritySuccess();
+    testChangePriorityThrowsOnInvalid();
+    testChangePriorityThrowsOnMissingArgs();
     testLogWithoutMessage();
     testEmptyCommand();
-    testFileError();
+    testLoggerInit();
+    testLoggerInitInvalidLevel();
 
     std::cout << "Все тесты пройдены!\n";
     return 0;

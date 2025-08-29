@@ -25,6 +25,7 @@ test_client: $(SRC_DIR)/client.cpp $(BUILD_DIR)/liblogger.so $(TEST_DIR)/test_cl
 
 clean:
 	rm -r build/*
+	rm *.txt
 
 client_sntz: $(SRC_DIR)/client.cpp $(BUILD_DIR)/liblogger.so
 	$(CC) $^ -Lbuild -llogger -Wl,-rpath=build -o $(BUILD_DIR)/$@ -fsanitize=thread

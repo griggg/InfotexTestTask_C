@@ -13,21 +13,23 @@
 #include "../headers/logger.h"
 #include "../headers/utils.h"
 
+
+
 class Client {
    public:
-	Client(std::string line);
+	Client();
 
 	Client(std::shared_ptr<ILogger> customLogger);
 
 	~Client();
 
-	std::shared_ptr<Logger> loggerInit(std::string line);
+	void loggerInit(std::string line);
 
 	void worker(std::shared_ptr<ILogger> logger);
 
 	void log(std::vector<std::string> args);
 
-	bool changePriorityLogLevel(std::vector<std::string> args);
+	void changePriorityLogLevel(std::vector<std::string> args);
 
    private:
 	std::shared_ptr<ILogger> logger;

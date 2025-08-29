@@ -11,13 +11,12 @@
 
 #include "../headers/logger.h"
 #include "../headers/utils.h"
+#include "../headers/print.h"
 
 
-void print(std::string msg) { std::cout << msg << std::endl; }
 
-Client::Client(std::string line) {
-	logger = loggerInit(line);
-	queue_worker = std::thread(&Client::worker, this, logger);
+Client::Client() {
+	
 };
 
 Client::Client(std::shared_ptr<ILogger> customLogger) {
@@ -37,27 +36,32 @@ Client::~Client() {
 	}
 }
 
-std::shared_ptr<Logger> Client::loggerInit(std::string line) {
+void Client::loggerInit(std::string line) {
 	std::vector<std::string> argsLoggerInit = split(line, ' ');
 	std::string filename = argsLoggerInit[0];
+	
+	
 
 	LogLevel logLevel;
 	if (argsLoggerInit.size() != 2) {
 		logLevel = LogLevel::INFO;
-		print("Выбран уровень логирофания по дефолту INFO");
+		std::cout << "Выбран уровень приоритета по дефолту " << GREEN("INFO") << std:: endl;
 	} else {
 		std::string defaultLogLevel = argsLoggerInit[1];
 		try {
 			logLevel = strToLogLevel(defaultLogLevel);
 		} catch (std::invalid_argument) {
-			return nullptr;
+			throw std::invalid_argument("Ошибка. Не существует такого типа loglevel");
 		}
 	}
-
-	std::shared_ptr<Logger> logger =
+	try {
+	 logger =
 		std::make_shared<Logger>(argsLoggerInit[0], logLevel);
-
-	return logger;
+		queue_worker = std::thread(&Client::worker, this, logger);
+	} catch(std::runtime_error e) {
+		throw e;
+	}
+	
 }
 
 void Client::worker(std::shared_ptr<ILogger> logger) {
@@ -72,9 +76,12 @@ void Client::worker(std::shared_ptr<ILogger> logger) {
 			auto [msg, loglevel] = queue_tasks.front();
 			queue_tasks.pop();
 			if (logger->log(msg, loglevel)) {
-				print("Лог успешно записан");
+				std:: cout << GREEN("Лог успешно записан") << std::endl;
 			} else {
-				print("Лог не записан");
+				std::cout << YELLOW("Лог не записан.") 
+					<< "Важность " << logLevelToStr(loglevel) 
+					<< "меньше приоритета логгера " << logLevelToStr(logger->getPriorityLogLevel())
+					<< std::endl;
 			}
 		}
 	}
@@ -95,28 +102,33 @@ void Client::log(std::vector<std::string> args) {
 	} else if (args.size() == 2) {
 		queue_tasks.push({args[1], LogLevel::INFO});
 
-		print("Вы не указали аргумент уровня важности сообщения. Выбран  INFO");
+		std::cout << "Вы не указали аргумент уровня важности сообщения. Выбран  "
+			<< GREEN("INFO") << std::endl;
+
 		cv.notify_all();
 	} else {
-		print("Ошибка. отсутствует сообщение.");
+		std::cout << RED("Ошибка.") << " Отсутствует сообщение." << std::endl;
 	}
 }
 
-bool Client::changePriorityLogLevel(std::vector<std::string> args) {
+void Client::changePriorityLogLevel(std::vector<std::string> args) {
 	std::lock_guard<std::mutex> lk(mutex);
 	if (args.size() == 2) {
 		LogLevel loglevel;
 		try {
 			loglevel = strToLogLevel(args[1]);
 		} catch (std::invalid_argument) {
-			print("Неизвестный тип LogLevel. Текущий приоритет: " +
+			throw std::invalid_argument(RED("Ошибка.") + 
+			"Неизвестный тип LogLevel. Текущий приоритет: " +
 				  logLevelToStr(logger->getPriorityLogLevel()));
-			return false;
 		}
 
 		logger->setPriorityLogLevel(loglevel);
-		return true;
+	} else {
+		throw std::invalid_argument(RED("Ошибка.") + 
+			" Не хватает аргументов для команды cdp" + 
+			" Текущий приоритет: " +
+				  logLevelToStr(logger->getPriorityLogLevel()));
 	}
-	return false;
 }
 

@@ -4,11 +4,16 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include "../headers/print.h"
 
 Logger::Logger(std::string filename, LogLevel priorityLogLevel) {
 	this->filename = filename;
 	this->priorityLogLevel = priorityLogLevel;
-	file = std::ofstream("build/"+this->filename);
+	file = std::ofstream(this->filename);
+	if (!file.is_open()) {
+		throw std::runtime_error(RED("Ошибка.") + "Не удалось открыть файл по адресу" 
+			+ this->filename);
+	}
 }
 
 std::string getCurrentTime() {
