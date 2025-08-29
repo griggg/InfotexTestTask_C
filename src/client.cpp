@@ -11,8 +11,6 @@
 
 #include "../headers/print.h"
 
-
-
 Client::Client() {
 	
 };
@@ -36,9 +34,13 @@ Client::~Client() {
 
 void Client::loggerInit(std::string line) {
 	std::vector<std::string> argsLoggerInit = split(line, ' ');
+	
+	if (argsLoggerInit.size() == 0 || argsLoggerInit.size() > 2) {
+		throw std::invalid_argument(RED("Ошибка.") 
+				+ "Неправильное количество аргументов для инициализации логгера");
+	}
+	
 	std::string filename = argsLoggerInit[0];
-	
-	
 
 	LogLevel logLevel;
 	if (argsLoggerInit.size() != 2) {

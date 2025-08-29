@@ -14,13 +14,17 @@ void print_menu() {
 	print("------------");
 }
 
-int main() {
-	std::cout << "Инициализация " << "Logger" << std::endl;
-	std::cout << "Напишите <имя файла логгера> <приоритет=" 
+void print_help_init() {
+    std::cout << "Напишите <имя файла логгера> <приоритет=" 
         << GREEN("INFO") << "/" 
         << YELLOW("WARNING") << "/" 
         << RED("ERROR") << "> (по умолч. INFO)"
         << std::endl;
+}
+
+int main() {
+	std::cout << "Инициализация " << "Logger" << std::endl;
+    print_help_init();
 
     int successInit = 0;
 
@@ -35,6 +39,9 @@ int main() {
         } catch (std::runtime_error &e) {
             print(e.what());
             print("Попробуйте другой путь");
+        } catch (std::invalid_argument &e) {
+            print(e.what());
+            print_help_init();
         }
     }
 	
@@ -49,7 +56,11 @@ int main() {
 			continue;
 		}
 		if (args[0] == "log") {
-			client.log(args);
+            try {
+			    client.log(args);
+            } catch (std::invalid_argument &e) {
+                print(e.what());
+            }
 		} else if (args[0] == "cdp") {
             try {
 			    client.changePriorityLogLevel(args);
