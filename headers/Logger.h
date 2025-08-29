@@ -5,6 +5,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+
 #include "ILogger.h"
 #include "LogLevel.h"
 
@@ -29,4 +30,3 @@ class Logger : public ILogger {
 	std::string filename;
 	std::ofstream file;
 };
-

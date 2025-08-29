@@ -1,8 +1,9 @@
 #pragma once
 
+#include <mutex>
 #include <string>
 #include <vector>
-#include <mutex>
+
 #include "ILogger.h"
 #include "LogLevel.h"
 
@@ -15,7 +16,7 @@ class MockLogger : public ILogger {
 	bool log(std::string message, LogLevel logLevel) override {
 		std::lock_guard<std::mutex> lock(mtx);
 		logs.emplace_back(message, logLevel);
-		return true;  
+		return true;
 	}
 
 	void setPriorityLogLevel(LogLevel loglevel) override {

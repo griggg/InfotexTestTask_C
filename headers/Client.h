@@ -9,11 +9,9 @@
 #include <string>
 #include <thread>
 
-#include "../headers/client.h"
-#include "../headers/logger.h"
-#include "../headers/utils.h"
-
-
+#include "../headers/Client.h"
+#include "../headers/Logger.h"
+#include "../headers/Utils.h"
 
 class Client {
    public:

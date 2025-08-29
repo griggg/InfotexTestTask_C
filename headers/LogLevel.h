@@ -1,9 +1,9 @@
 #pragma once
 
-#include <string>
 #include <iostream>
+#include <string>
 
-#include "print.h"
+#include "Print.h"
 
 enum class LogLevel {
 	INFO = 0,
@@ -31,6 +31,7 @@ inline LogLevel strToLogLevel(std::string str) {
 	if (str == "INFO") return LogLevel::INFO;
 	if (str == "WARNING") return LogLevel::WARNING;
 	if (str == "ERROR") return LogLevel::ERROR;
-	throw std::invalid_argument(RED("Ошибка.") + 
-        "Неизвестный LogLevel. Выберите из INFO/WARNING/ERROR");
+	throw std::invalid_argument(
+		RED("Ошибка.") +
+		"Неизвестный LogLevel. Выберите из INFO/WARNING/ERROR");
 }

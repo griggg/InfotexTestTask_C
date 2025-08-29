@@ -1,4 +1,4 @@
-#include "../headers/client.h"
+#include "../headers/Client.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -9,10 +9,10 @@
 #include <string>
 #include <thread>
 
-#include "../headers/print.h"
+#include "../headers/Print.h"
 
 Client::Client() {
-	
+
 };
 
 Client::Client(std::shared_ptr<ILogger> customLogger) {
@@ -34,35 +34,35 @@ Client::~Client() {
 
 void Client::loggerInit(std::string line) {
 	std::vector<std::string> argsLoggerInit = split(line, ' ');
-	
+
 	if (argsLoggerInit.size() == 0 || argsLoggerInit.size() > 2) {
-		throw std::invalid_argument(RED("Ошибка.") 
-				+ "Неправильное количество аргументов для инициализации логгера");
+		throw std::invalid_argument(
+			RED("Ошибка.") +
+			"Неправильное количество аргументов для инициализации логгера");
 	}
-	
+
 	std::string filename = argsLoggerInit[0];
 
 	LogLevel logLevel;
 	if (argsLoggerInit.size() != 2) {
 		logLevel = LogLevel::INFO;
-		std::cout << "Выбран уровень приоритета по дефолту " << GREEN("INFO") << std:: endl;
+		std::cout << "Выбран уровень приоритета по дефолту " << GREEN("INFO")
+				  << std::endl;
 	} else {
 		std::string defaultLogLevel = argsLoggerInit[1];
 		try {
 			logLevel = strToLogLevel(defaultLogLevel);
-		} catch (std::invalid_argument&) {
-			throw std::invalid_argument(RED("Ошибка.") 
-				+ "Не существует такого типа loglevel");
+		} catch (std::invalid_argument &) {
+			throw std::invalid_argument(RED("Ошибка.") +
+										"Не существует такого типа loglevel");
 		}
 	}
 	try {
-	 logger =
-		std::make_shared<Logger>(argsLoggerInit[0], logLevel);
+		logger = std::make_shared<Logger>(argsLoggerInit[0], logLevel);
 		queue_worker = std::thread(&Client::worker, this, logger);
-	} catch(std::runtime_error &e) {
+	} catch (std::runtime_error &e) {
 		throw e;
 	}
-	
 }
 
 void Client::worker(std::shared_ptr<ILogger> logger) {
@@ -77,12 +77,13 @@ void Client::worker(std::shared_ptr<ILogger> logger) {
 			auto [msg, loglevel] = queue_tasks.front();
 			queue_tasks.pop();
 			if (logger->log(msg, loglevel)) {
-				std:: cout << GREEN("Лог успешно записан") << std::endl;
+				std::cout << GREEN("Лог успешно записан") << std::endl;
 			} else {
-				std::cout << YELLOW("Лог не записан.") 
-					<< "Важность " << logLevelToStr(loglevel) 
-					<< "меньше приоритета логгера " << logLevelToStr(logger->getPriorityLogLevel())
-					<< std::endl;
+				std::cout << YELLOW("Лог не записан.") << "Важность "
+						  << logLevelToStr(loglevel)
+						  << "меньше приоритета логгера "
+						  << logLevelToStr(logger->getPriorityLogLevel())
+						  << std::endl;
 			}
 		}
 	}
@@ -99,12 +100,14 @@ void Client::log(std::vector<std::string> args) {
 	} else if (args.size() == 2) {
 		queue_tasks.push({args[1], LogLevel::INFO});
 
-		std::cout << "Вы не указали аргумент уровня важности сообщения. Выбран  "
+		std::cout
+			<< "Вы не указали аргумент уровня важности сообщения. Выбран  "
 			<< GREEN("INFO") << std::endl;
 
 		cv.notify_all();
 	} else {
-		throw std::invalid_argument(RED("Ошибка.") +  " Некорректное число аргументов");
+		throw std::invalid_argument(RED("Ошибка.") +
+									" Некорректное число аргументов");
 	}
 }
 
@@ -114,18 +117,18 @@ void Client::changePriorityLogLevel(std::vector<std::string> args) {
 		LogLevel loglevel;
 		try {
 			loglevel = strToLogLevel(args[1]);
-		} catch (std::invalid_argument&) {
-			throw std::invalid_argument(RED("Ошибка.") + 
-			"Неизвестный тип LogLevel. Текущий приоритет: " +
-				  logLevelToStr(logger->getPriorityLogLevel()));
+		} catch (std::invalid_argument &) {
+			throw std::invalid_argument(
+				RED("Ошибка.") +
+				"Неизвестный тип LogLevel. Текущий приоритет: " +
+				logLevelToStr(logger->getPriorityLogLevel()));
 		}
 
 		logger->setPriorityLogLevel(loglevel);
 	} else {
-		throw std::invalid_argument(RED("Ошибка.") + 
-			" Не хватает аргументов для команды cdp" + 
+		throw std::invalid_argument(
+			RED("Ошибка.") + " Не хватает аргументов для команды cdp" +
 			" Текущий приоритет: " +
-				  logLevelToStr(logger->getPriorityLogLevel()));
+			logLevelToStr(logger->getPriorityLogLevel()));
 	}
 }
-
