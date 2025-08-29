@@ -50,6 +50,7 @@ client_sntz: $(BUILD_DIR)/app.o $(BUILD_DIR)/client.o $(LOGGER_LIB)
 	$(CC) $(CFLAGS) $^ -L$(BUILD_DIR) -llogger -Wl,-rpath=$(BUILD_DIR) -fsanitize=thread -o $(BUILD_DIR)/client_sntz
 
 clean:
+	rm -rf *.txt
 	rm -rf $(BUILD_DIR) *.txt
 
 test_valgrind: test_logger test_client
