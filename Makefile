@@ -1,31 +1,60 @@
-CFLAGS = -Wall -Werror -Wextra -std=cpp17 -Iheaders
+CFLAGS = -Wall -Werror -Wextra -std=c++17 -Iheaders
 CC = g++
 
 BUILD_DIR = build
 SRC_DIR = src
 TEST_DIR = tests
 
-.PHONY: app all clean client logger test_logger test_client 
+SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
+OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRC_FILES))
 
-all: app logger test_logger test_client
+TEST_CLIENT_SRC := $(TEST_DIR)/test_client.cpp
+TEST_LOGGER_SRC := $(TEST_DIR)/test_logger.cpp
 
-$(BUILD_DIR)/liblogger.so : $(SRC_DIR)/logger.cpp
-	$(CC) -fPIC -shared $< -o $(BUILD_DIR)/liblogger.so 
+APP_TARGET = $(BUILD_DIR)/app
+LOGGER_LIB = $(BUILD_DIR)/liblogger.so
+TEST_CLIENT = $(BUILD_DIR)/test_client
+TEST_LOGGER = $(BUILD_DIR)/test_logger
 
-logger: $(BUILD_DIR)/liblogger.so
+.PHONY: all clean logger app test_logger test_client test_valgrind client_sntz
 
-app: $(SRC_DIR)/app.cpp $(SRC_DIR)/client.cpp $(BUILD_DIR)/liblogger.so
-	$(CC) $^ -Lbuild -llogger -Wl,-rpath=build -o $(BUILD_DIR)/$@
+all: $(BUILD_DIR) logger $(APP_TARGET) test_logger test_client
 
-test_logger: $(SRC_DIR)/logger.cpp $(TEST_DIR)/test_logger.cpp
-	$(CC) $^ -o $(BUILD_DIR)/$@
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
-test_client: $(SRC_DIR)/client.cpp $(BUILD_DIR)/liblogger.so $(TEST_DIR)/test_client.cpp
-	$(CC) $^ -Lbuild -llogger -Wl,-rpath=build -o $(BUILD_DIR)/$@
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+
+$(LOGGER_LIB): $(BUILD_DIR)/logger.o
+	$(CC) -shared $^ -o $@
+
+logger: $(LOGGER_LIB)
+
+$(APP_TARGET): $(BUILD_DIR)/app.o $(BUILD_DIR)/client.o $(LOGGER_LIB)
+	$(CC) $(CFLAGS) $^ -L$(BUILD_DIR) -llogger -Wl,-rpath=$(BUILD_DIR) -o $@
+
+app: $(APP_TARGET)
+
+$(TEST_LOGGER): $(TEST_LOGGER_SRC) $(BUILD_DIR)/logger.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+test_logger: $(TEST_LOGGER)
+
+$(TEST_CLIENT): $(TEST_CLIENT_SRC) $(BUILD_DIR)/client.o $(LOGGER_LIB)
+	$(CC) $(CFLAGS) $^ -L$(BUILD_DIR) -llogger -Wl,-rpath=$(BUILD_DIR) -o $@
+
+test_client: $(TEST_CLIENT)
+
+client_sntz: $(BUILD_DIR)/app.o $(BUILD_DIR)/client.o $(LOGGER_LIB)
+	$(CC) $(CFLAGS) $^ -L$(BUILD_DIR) -llogger -Wl,-rpath=$(BUILD_DIR) -fsanitize=thread -o $(BUILD_DIR)/client_sntz
 
 clean:
-	rm -r build/*
-	rm *.txt
+	rm -rf $(BUILD_DIR) *.txt
 
-client_sntz: $(SRC_DIR)/client.cpp $(BUILD_DIR)/liblogger.so
-	$(CC) $^ -Lbuild -llogger -Wl,-rpath=build -o $(BUILD_DIR)/$@ -fsanitize=thread
+test_valgrind: test_logger test_client
+	@echo "Запуск тестов logger под Valgrind..."
+	valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 $(TEST_LOGGER)
+	@echo "Запуск тестов client под Valgrind..."
+	valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 $(TEST_CLIENT)
+	@echo "Valgrind: все тесты прошли успешно без ошибок памяти."

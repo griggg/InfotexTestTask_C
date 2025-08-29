@@ -1,43 +1,46 @@
-#include "../headers/client.h"
-#include "../headers/print.h"
-
+#include "../headers/Client.h"
+#include "../headers/Print.h"
 
 void print_menu() {
-    print("------------");
+	print("------------");
 	print("Меню логгера");
 	print(
 		"1) log <сообщение> <важность=INFO/WARNING/ERROR> (по умолч. INFO) - "
 		"Записать сообщение");
 	print("2) cdp <INFO/WARNING/ERROR> - Сменить уровень приоритета у логгера");
 	print("3) exit - завершить работу");
-    print("4) help - показать команды");
+	print("4) help - показать команды");
 	print("------------");
+}
+
+void print_help_init() {
+	std::cout << "Напишите <имя файла логгера> <приоритет=" << GREEN("INFO")
+			  << "/" << YELLOW("WARNING") << "/" << RED("ERROR")
+			  << "> (по умолч. INFO)" << std::endl;
 }
 
 int main() {
 	std::cout << "Инициализация " << "Logger" << std::endl;
-	std::cout << "Напишите <имя файла логгера> <приоритет=" 
-        << GREEN("INFO") << "/" 
-        << YELLOW("WARNING") << "/" 
-        << RED("ERROR") << "> (по умолч. INFO)"
-        << std::endl;
+	print_help_init();
 
-    int successInit = 0;
+	int successInit = 0;
 
-    Client client;
-    std::string line;
+	Client client;
+	std::string line;
 
-    while (!successInit) {
-        try {
-            std::getline(std::cin, line);
-            client.loggerInit(line);
-            successInit = 1;
-        } catch (std::runtime_error e) {
-            print(e.what());
-            print("Попробуйте другой путь");
-        }
-    }
-	
+	while (!successInit) {
+		try {
+			std::getline(std::cin, line);
+			client.loggerInit(line);
+			successInit = 1;
+		} catch (std::runtime_error &e) {
+			print(e.what());
+			print("Попробуйте другой путь");
+		} catch (std::invalid_argument &e) {
+			print(e.what());
+			print_help_init();
+		}
+	}
 
 	print_menu();
 
@@ -49,19 +52,24 @@ int main() {
 			continue;
 		}
 		if (args[0] == "log") {
-			client.log(args);
+			try {
+				client.log(args);
+			} catch (std::invalid_argument &e) {
+				print(e.what());
+			}
 		} else if (args[0] == "cdp") {
-            try {
-			    client.changePriorityLogLevel(args);
-                std::cout << GREEN("Успешно. Уровень приоритета установлен") << std::endl;
-            } catch (std::invalid_argument &e) {
-                std::cerr << e.what() << std::endl;
-            }
+			try {
+				client.changePriorityLogLevel(args);
+				std::cout << GREEN("Успешно. Уровень приоритета установлен")
+						  << std::endl;
+			} catch (std::invalid_argument &e) {
+				std::cerr << e.what() << std::endl;
+			}
 		} else if (args[0] == "exit") {
 			break;
 		} else if (args[0] == "help") {
-            print_menu();
-        }else {
+			print_menu();
+		} else {
 			print("Неизвестная команда: " + args[0]);
 		}
 	}

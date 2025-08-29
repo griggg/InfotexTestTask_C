@@ -5,6 +5,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+
 #include "ILogger.h"
 #include "LogLevel.h"
 
@@ -15,11 +16,11 @@ class Logger : public ILogger {
 
 	Logger(std::string filename, LogLevel priority);
 
-	bool log(std::string message, LogLevel logLevel);
+	bool log(std::string message, LogLevel logLevel) override;
 
-	void setPriorityLogLevel(LogLevel loglevel);
+	void setPriorityLogLevel(LogLevel loglevel) override;
 
-	LogLevel getPriorityLogLevel();
+	LogLevel getPriorityLogLevel() override;
 
 	~Logger();
 
@@ -29,4 +30,3 @@ class Logger : public ILogger {
 	std::string filename;
 	std::ofstream file;
 };
-
