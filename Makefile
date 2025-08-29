@@ -5,9 +5,14 @@ BUILD_DIR = build
 SRC_DIR = src
 TEST_DIR = tests
 
-.PHONY: app all clean client logger test_logger test_client 
 
-all: app logger test_logger test_client
+
+.PHONY: app all clean client logger test_logger test_client test_valgrind
+
+all: $(BUILD_DIR) app logger test_logger test_client
+
+$(BUILD_DIR):
+	mkdir $(BUILD_DIR)
 
 $(BUILD_DIR)/liblogger.so : $(SRC_DIR)/logger.cpp
 	$(CC) -fPIC -shared $< -o $(BUILD_DIR)/liblogger.so 
@@ -29,3 +34,10 @@ clean:
 
 client_sntz: $(SRC_DIR)/client.cpp $(BUILD_DIR)/liblogger.so
 	$(CC) $^ -Lbuild -llogger -Wl,-rpath=build -o $(BUILD_DIR)/$@ -fsanitize=thread
+
+test_valgrind: test_logger test_client
+	@echo "Запуск тестов logger под Valgrind..."
+	valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 $(BUILD_DIR)/test_logger
+	@echo "Запуск тестов client под Valgrind..."
+	valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 $(BUILD_DIR)/test_client
+	@echo "Valgrind: все тесты прошли успешно без ошибок памяти."
